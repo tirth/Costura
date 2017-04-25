@@ -7,15 +7,11 @@ using Mono.Collections.Generic;
 
 public static class Extensions
 {
-    public static IEnumerable<string> NonEmpty(this IEnumerable<string> list)
-    {
-        return list.Select(x => x.Trim()).Where(x => x != string.Empty);
-    }
+    public static IEnumerable<string> NonEmpty(this IEnumerable<string> list) 
+        => list.Select(x => x.Trim()).Where(x => x != string.Empty);
 
-    public static Collection<TypeReference> GetGenericInstanceArguments(this TypeReference type)
-    {
-        return ((GenericInstanceType)type).GenericArguments;
-    }
+    public static Collection<TypeReference> GetGenericInstanceArguments(this TypeReference type) 
+        => ((GenericInstanceType)type).GenericArguments;
 
     public static MethodReference MakeHostInstanceGeneric(this MethodReference self, params TypeReference[] args)
     {
@@ -30,14 +26,10 @@ public static class Extensions
         };
 
         foreach (var parameter in self.Parameters)
-        {
             reference.Parameters.Add(new ParameterDefinition(parameter.ParameterType));
-        }
 
         foreach (var genericParam in self.GenericParameters)
-        {
             reference.GenericParameters.Add(new GenericParameter(genericParam.Name, reference));
-        }
 
         return reference;
     }

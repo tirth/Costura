@@ -7,39 +7,35 @@ using System.Text;
 
 partial class ModuleWeaver
 {
-    readonly Dictionary<string, string> checksums = new Dictionary<string, string>();
+    private readonly Dictionary<string, string> _checksums = new Dictionary<string, string>();
 
-    static string CalculateChecksum(string filename)
+    private static string CalculateChecksum(string filename)
     {
-        using (FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-        {
+        using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             return CalculateChecksum(fs);
-        }
     }
 
-    static string CalculateChecksum(Stream stream)
+    private static string CalculateChecksum(Stream stream)
     {
-        using (BufferedStream bs = new BufferedStream(stream))
+        using (var bufferedStream = new BufferedStream(stream))
+        using (var sha1 = new SHA1Managed())
         {
-            using (SHA1Managed sha1 = new SHA1Managed())
-            {
-                byte[] hash = sha1.ComputeHash(bs);
-                StringBuilder formatted = new StringBuilder(2 * hash.Length);
-                foreach (byte b in hash)
-                {
-                    formatted.AppendFormat("{0:X2}", b);
-                }
-                return formatted.ToString();
-            }
+            var hash = sha1.ComputeHash(bufferedStream);
+
+            var formatted = new StringBuilder(2 * hash.Length);
+            foreach (var b in hash)
+                formatted.AppendFormat("{0:X2}", b);
+
+            return formatted.ToString();
         }
     }
 
-    void AddChecksumsToTemplate()
+    private void AddChecksumsToTemplate()
     {
-        if (checksumsField == null)
+        if (_checksumsField == null)
             return;
 
-        foreach (var checksum in checksums)
-            AddToDictionary(checksumsField, checksum.Key, checksum.Value);
+        foreach (var checksum in _checksums)
+            AddToDictionary(_checksumsField, checksum.Key, checksum.Value);
     }
 }

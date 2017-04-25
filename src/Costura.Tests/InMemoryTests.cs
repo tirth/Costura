@@ -5,13 +5,13 @@ public class InMemoryTests : BasicTests
 {
     protected override string Suffix => "InMemory";
 
-    [TestFixtureSetUp]
+    [OneTimeSetUp]
     public void CreateAssembly()
     {
         if (AppDomainRunner.IsNotInTestAppDomain)
             CreateIsolatedAssemblyCopy("ExeToProcess",
                 "<Costura />",
-                new string[] { "AssemblyToReference.dll", "AssemblyToReferencePreEmbedded.dll", "ExeToReference.exe" });
+                new[] { "AssemblyToReference.dll", "AssemblyToReferencePreEmbedded.dll", "ExeToReference.exe" });
     }
 
     [SetUp]

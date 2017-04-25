@@ -23,9 +23,7 @@ public partial class ModuleWeaver
     public void Execute()
     {
         if (ModuleDefinition.EntryPoint == null)
-        {
             throw new WeavingException("Costura only works with executables.");
-        }
 
         var config = new Configuration(Config);
 

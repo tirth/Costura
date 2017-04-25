@@ -4,7 +4,7 @@ using Mono.Cecil.Cil;
 
 partial class ModuleWeaver
 {
-    void ImportModuleLoader()
+    private void ImportModuleLoader()
     {
         const MethodAttributes attributes = MethodAttributes.Private
                                             | MethodAttributes.HideBySig
@@ -14,16 +14,16 @@ partial class ModuleWeaver
 
         var moduleClass = ModuleDefinition.Types.FirstOrDefault(x => x.Name == "<Module>");
         if (moduleClass == null)
-        {
             throw new WeavingException("Found no module class!");
-        }
+
         var cctor = moduleClass.Methods.FirstOrDefault(x => x.Name == ".cctor");
         if (cctor == null)
         {
-            cctor = new MethodDefinition(".cctor", attributes, voidTypeReference);
+            cctor = new MethodDefinition(".cctor", attributes, _voidTypeReference);
             cctor.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
             moduleClass.Methods.Add(cctor);
         }
-        cctor.Body.Instructions.Insert(0, Instruction.Create(OpCodes.Call, attachMethod));
+
+        cctor.Body.Instructions.Insert(0, Instruction.Create(OpCodes.Call, _attachMethod));
     }
 }

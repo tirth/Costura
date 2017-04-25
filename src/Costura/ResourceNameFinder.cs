@@ -6,17 +6,10 @@ using Mono.Cecil.Cil;
 
 partial class ModuleWeaver
 {
-    void BuildUpNameDictionary(bool createTemporaryAssemblies, List<string> preloadOrder)
+    private void BuildUpNameDictionary(bool createTemporaryAssemblies, List<string> preloadOrder)
     {
         var orderedResources = preloadOrder
-            .Join<string, Resource, string, Resource>(ModuleDefinition.Resources, p => p.ToLowerInvariant(),
-            r =>
-            {
-                var parts = r.Name.Split('.');
-                string ext, name;
-                GetNameAndExt(parts, out name, out ext);
-                return name;
-            }, (s, r) => r)
+            .Join(ModuleDefinition.Resources, p => p.ToLowerInvariant(), r => GetNameAndExt(r.Name.Split('.')).name, (s, r) => r)
             .Union(ModuleDefinition.Resources.OrderBy(r => r.Name))
             .Where(r => r.Name.StartsWith("costura"))
             .Select(r => r.Name);
@@ -25,59 +18,57 @@ partial class ModuleWeaver
         {
             var parts = resource.Split('.');
 
-            string ext, name;
-            GetNameAndExt(parts, out name, out ext);
-
-            if (parts[0] == "costura")
+            switch (parts[0])
             {
-                if (createTemporaryAssemblies)
-                    AddToList(preloadListField, resource);
-                else
-                {
-                    if (ext == "pdb")
-                        AddToDictionary(symbolNamesField, name, resource);
+                case "costura":
+                    if (createTemporaryAssemblies)
+                        AddToList(_preloadListField, resource);
                     else
-                        AddToDictionary(assemblyNamesField, name, resource);
-                }
-            }
-            else if (parts[0] == "costura32")
-            {
-                AddToList(preload32ListField, resource);
-            }
-            else if (parts[0] == "costura64")
-            {
-                AddToList(preload64ListField, resource);
+                    {
+                        var (name, ext) = GetNameAndExt(parts);
+                        AddToDictionary(ext == "pdb" ? _symbolNamesField : _assemblyNamesField, name, resource);
+                    }
+
+                    break;
+                    
+                case "costura32":
+                    AddToList(_preload32ListField, resource);
+                    break;
+
+                case "costura64":
+                    AddToList(_preload64ListField, resource);
+                    break;
             }
         }
     }
 
-    private static void GetNameAndExt(string[] parts, out string name, out string ext)
+    private static (string name, string ext) GetNameAndExt(IReadOnlyList<string> parts)
     {
-        var isZip = parts[parts.Length - 1] == "zip";
+        var isZip = parts.Last() == "zip";
 
-        ext = parts[parts.Length - (isZip ? 2 : 1)];
+        var ext = parts[parts.Count - (isZip ? 2 : 1)];
 
-        name = string.Join(".", parts.Skip(1).Take(parts.Length - (isZip ? 3 : 2)));
+        var name = string.Join(".", parts.Skip(1).Take(parts.Count - (isZip ? 3 : 2)));
+
+        return (name, ext);
     }
 
-    void AddToDictionary(FieldDefinition field, string key, string name)
+    private void AddToDictionary(FieldReference field, string key, string name)
     {
-        var retIndex = loaderCctor.Body.Instructions.Count - 1;
-        loaderCctor.Body.Instructions.InsertBefore(retIndex, new Instruction[] {
-            Instruction.Create(OpCodes.Ldsfld, field),
-            Instruction.Create(OpCodes.Ldstr, key),
-            Instruction.Create(OpCodes.Ldstr, name),
-            Instruction.Create(OpCodes.Callvirt, dictionaryOfStringOfStringAdd),
-        });
+        var retIndex = _loaderCctor.Body.Instructions.Count - 1;
+        _loaderCctor.Body.Instructions.InsertBefore(retIndex, 
+            Instruction.Create(OpCodes.Ldsfld, field), 
+            Instruction.Create(OpCodes.Ldstr, key), 
+            Instruction.Create(OpCodes.Ldstr, name), 
+            Instruction.Create(OpCodes.Callvirt, _dictionaryOfStringOfStringAdd));
     }
 
-    void AddToList(FieldDefinition field, string name)
+    private void AddToList(FieldReference field, string name)
     {
-        var retIndex = loaderCctor.Body.Instructions.Count - 1;
-        loaderCctor.Body.Instructions.InsertBefore(retIndex, new Instruction[] {
+        var retIndex = _loaderCctor.Body.Instructions.Count - 1;
+        _loaderCctor.Body.Instructions.InsertBefore(retIndex, 
             Instruction.Create(OpCodes.Ldsfld, field),
             Instruction.Create(OpCodes.Ldstr, name),
-            Instruction.Create(OpCodes.Callvirt, listOfStringAdd),
-        });
+            Instruction.Create(OpCodes.Callvirt, _listOfStringAdd));
     }
 }

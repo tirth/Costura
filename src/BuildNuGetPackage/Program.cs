@@ -28,14 +28,12 @@ namespace BuildNuGetPackage
                 path = Path.GetFullPath(args[0]);
 
                 if (!Directory.Exists(path))
-                {
                     Directory.CreateDirectory(path);
-                }
             }
 
             Environment.CurrentDirectory = Path.GetDirectoryName(typeof(Program).Assembly.Location);
 
-            var propertyProvider = new PropertyProvider()
+            var propertyProvider = new PropertyProvider
             {
                 { "version", GitVersionInformation.NuGetVersionV2 + GitVersionInformation.BuildMetaDataPadded }
             };
