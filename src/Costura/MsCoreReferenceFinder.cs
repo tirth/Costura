@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Mono.Cecil;
 
 partial class ModuleWeaver
@@ -10,7 +11,7 @@ partial class ModuleWeaver
 
     void FindMsCoreReferences()
     {
-        var msCoreLibDefinition = AssemblyResolver.Resolve("mscorlib");
+        var msCoreLibDefinition = AssemblyResolver.Resolve(new AssemblyNameReference("mscorlib", new Version(4, 0)));
         var msCoreTypes = msCoreLibDefinition.MainModule.Types;
 
         var objectDefinition = msCoreTypes.FirstOrDefault(x => x.Name == "Object");

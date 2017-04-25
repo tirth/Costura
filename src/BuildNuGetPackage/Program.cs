@@ -19,7 +19,7 @@ namespace BuildNuGetPackage
             }
         }
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             var path = "";
 

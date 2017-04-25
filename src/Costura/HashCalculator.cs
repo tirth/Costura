@@ -6,9 +6,9 @@ using Mono.Cecil;
 
 partial class ModuleWeaver
 {
-    string resourcesHash;
+    private string _resourcesHash;
 
-    void CalculateHash()
+    private void CalculateHash()
     {
         var data = ModuleDefinition.Resources.OfType<EmbeddedResource>()
             .OrderBy(r => r.Name)
@@ -21,12 +21,10 @@ partial class ModuleWeaver
             var hashBytes = md5.ComputeHash(data);
 
             var sb = new StringBuilder();
-            for (var i = 0; i < hashBytes.Length; i++)
-            {
-                sb.Append(hashBytes[i].ToString("X2"));
-            }
+            foreach (var b in hashBytes)
+                sb.Append(b.ToString("X2"));
 
-            resourcesHash = sb.ToString();
+            _resourcesHash = sb.ToString();
         }
     }
 }

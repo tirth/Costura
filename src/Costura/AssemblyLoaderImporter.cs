@@ -151,7 +151,6 @@ partial class ModuleWeaver
             foreach (var variableDefinition in templateMethod.Body.Variables)
             {
                 var newVariableDefinition = new VariableDefinition(Resolve(variableDefinition.VariableType));
-                newVariableDefinition.Name = variableDefinition.Name;
                 newMethod.Body.Variables.Add(newVariableDefinition);
             }
             CopyInstructions(templateMethod, newMethod);
@@ -220,14 +219,14 @@ partial class ModuleWeaver
         Instruction newInstruction;
         if (instruction.OpCode == OpCodes.Ldstr && ((string)instruction.Operand) == "To be replaced at compile time")
         {
-            newInstruction = Instruction.Create(OpCodes.Ldstr, resourcesHash);
+            newInstruction = Instruction.Create(OpCodes.Ldstr, _resourcesHash);
         }
         else
         {
             newInstruction = (Instruction)instructionConstructorInfo.Invoke(new[] { instruction.OpCode, instruction.Operand });
             newInstruction.Operand = Import(instruction.Operand);
         }
-        newInstruction.SequencePoint = TranslateSequencePoint(instruction.SequencePoint);
+        //newInstruction.SequencePoint = TranslateSequencePoint(instruction.SequencePoint);
 
         if (instruction.Operand != null && newInstruction.Operand == null)
             Debugger.Break();
@@ -235,26 +234,26 @@ partial class ModuleWeaver
         return newInstruction;
     }
 
-    SequencePoint TranslateSequencePoint(SequencePoint sequencePoint)
-    {
-        if (sequencePoint == null)
-            return null;
+    //SequencePoint TranslateSequencePoint(SequencePoint sequencePoint)
+    //{
+    //    if (sequencePoint == null)
+    //        return null;
 
-        var document = new Document(Path.Combine(Path.GetDirectoryName(AssemblyFilePath), Path.GetFileName(sequencePoint.Document.Url)))
-        {
-            Language = sequencePoint.Document.Language,
-            LanguageVendor = sequencePoint.Document.LanguageVendor,
-            Type = sequencePoint.Document.Type,
-        };
+    //    var document = new Document(Path.Combine(Path.GetDirectoryName(AssemblyFilePath), Path.GetFileName(sequencePoint.Document.Url)))
+    //    {
+    //        Language = sequencePoint.Document.Language,
+    //        LanguageVendor = sequencePoint.Document.LanguageVendor,
+    //        Type = sequencePoint.Document.Type,
+    //    };
 
-        return new SequencePoint(document)
-        {
-            StartLine = sequencePoint.StartLine,
-            StartColumn = sequencePoint.StartColumn,
-            EndLine = sequencePoint.EndLine,
-            EndColumn = sequencePoint.EndColumn,
-        };
-    }
+    //    return new SequencePoint(document)
+    //    {
+    //        StartLine = sequencePoint.StartLine,
+    //        StartColumn = sequencePoint.StartColumn,
+    //        EndLine = sequencePoint.EndLine,
+    //        EndColumn = sequencePoint.EndColumn,
+    //    };
+    //}
 
     object Import(object operand)
     {
